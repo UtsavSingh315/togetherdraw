@@ -6,7 +6,7 @@ const dev = process.env.NODE_ENV !== "production";
 const hostname = dev ? "localhost" : "0.0.0.0"; // Bind to all interfaces in production
 const port = process.env.PORT || 3000;
 
-console.log(`🚀 Starting server in ${dev ? 'development' : 'production'} mode`);
+console.log(`🚀 Starting server in ${dev ? "development" : "production"} mode`);
 console.log(`🌐 Hostname: ${hostname}, Port: ${port}`);
 
 // Prepare Next.js app
@@ -286,7 +286,7 @@ app.prepare().then(() => {
     })
     .listen(port, hostname, () => {
       console.log(`✅ Ready on http://${hostname}:${port}`);
-      console.log(`🌐 App URL: ${process.env.APP_URL || 'Not set'}`);
+      console.log(`🌐 App URL: ${process.env.APP_URL || "Not set"}`);
       console.log(`🔌 Socket.IO server running with WebSocket support`);
     });
 });

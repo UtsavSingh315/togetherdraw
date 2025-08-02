@@ -6,10 +6,10 @@ const nextConfig = {
     // Add path aliases
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': __dirname,
-      '@/components': __dirname + '/components',
-      '@/lib': __dirname + '/lib',
-      '@/pages': __dirname + '/pages',
+      "@": __dirname,
+      "@/components": __dirname + "/components",
+      "@/lib": __dirname + "/lib",
+      "@/pages": __dirname + "/pages",
     };
 
     if (!isServer) {

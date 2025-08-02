@@ -131,7 +131,7 @@ export const SocketManager: React.FC<SocketManagerProps> = ({
       console.log("❌ Connection error:", error);
       callbacksRef.current.setIsLoading(false);
       callbacksRef.current.onConnectionChange(false);
-      
+
       // For Render deployment, allow Socket.IO to handle reconnection
       console.log("🔄 Connection failed, Socket.IO will retry automatically");
     });
