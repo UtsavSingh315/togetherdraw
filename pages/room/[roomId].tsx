@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import DrawingRoom from "../drawing-room";
+import { DrawingRoom } from "../drawing-room";
 import { LoadingHearts } from "../../components/shared/LoadingHearts";
 import { Button } from "../../components/ui/button";
 import {

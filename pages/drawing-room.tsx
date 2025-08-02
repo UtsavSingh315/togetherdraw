@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { LoadingHearts } from "../components/shared/LoadingHearts";
 import { DrawingCanvas } from "../components/canvas/DrawingCanvas";
@@ -8,12 +9,12 @@ import { SocketManager } from "../components/connection/SocketManager";
 import { toast } from "../components/ui/use-toast";
 
 interface DrawingRoomProps {
-  user: {
+  user?: {
     name: string;
     role: "host" | "guest" | "user1" | "user2";
     roomCode: string;
   };
-  onBack: () => void;
+  onBack?: () => void;
   onRoomCreated?: (roomCode: string) => void;
 }
 
@@ -22,6 +23,17 @@ export const DrawingRoom = ({
   onBack,
   onRoomCreated,
 }: DrawingRoomProps) => {
+  // SSR-safe guard - if no user prop during build, show loading
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <LoadingHearts message="Loading..." />
+        </div>
+      </div>
+    );
+  }
+
   const [selectedTool, setSelectedTool] = useState("pen");
   const [selectedColor, setSelectedColor] = useState("#FF6B9D");
   const [brushSize, setBrushSize] = useState(3);
@@ -33,6 +45,17 @@ export const DrawingRoom = ({
   const [connectionMode, setConnectionMode] = useState<
     "connecting" | "online" | "local"
   >("connecting");
+
+  // Handle SSR case where user might be undefined
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <LoadingHearts message="Loading..." />
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     console.log("📊 DrawingRoom mounted with user:", user);
