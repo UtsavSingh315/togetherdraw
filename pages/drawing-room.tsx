@@ -163,8 +163,11 @@ export const DrawingRoom = ({
   };
 
   const handleShare = () => {
-    const shareText = `Join me on HeartCanvas! Room code: ${user.roomCode}`;
-    const shareUrl = `${window.location.origin}/room/${user.roomCode}`;
+    if (!user) return; // Early return if user is undefined
+
+    const roomCode = user.roomCode;
+    const shareText = `Join me on HeartCanvas! Room code: ${roomCode}`;
+    const shareUrl = `${window.location.origin}/room/${roomCode}`;
 
     // Try to use native sharing if available
     if (navigator.share) {
@@ -204,10 +207,10 @@ export const DrawingRoom = ({
           console.error("Clipboard failed:", clipboardError);
           // Final fallback: just copy room code
           try {
-            navigator.clipboard.writeText(user.roomCode);
+            navigator.clipboard.writeText(roomCode);
             toast({
               title: "Room code copied! 💕",
-              description: `Room code ${user.roomCode} copied to clipboard`,
+              description: `Room code ${roomCode} copied to clipboard`,
             });
           } catch (finalError) {
             console.error("All copy methods failed:", finalError);
