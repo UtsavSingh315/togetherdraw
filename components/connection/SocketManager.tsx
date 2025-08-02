@@ -95,6 +95,9 @@ export const SocketManager: React.FC<SocketManagerProps> = ({
     const socket = io(SOCKET_URL, {
       transports: ["websocket", "polling"],
       timeout: 20000,
+      forceNew: false,
+      upgrade: true,
+      rememberUpgrade: true,
     });
 
     socketRef.current = socket;
@@ -108,32 +111,47 @@ export const SocketManager: React.FC<SocketManagerProps> = ({
       // Handle room creation or joining after connection
       if (user.roomCode === "creating") {
         console.log("🏗️ Creating new room for:", user.name);
-        socket.emit("create-room", { name: user.name });
+        socket.emit("create-room", { userName: user.name });
+        
+        // Fallback timeout for room creation (reduced since server should respond quickly)
+        setTimeout(() => {
+          if (!socket.connected) {
+            console.log("⏰ Room creation timeout, generating local room code");
+            const roomCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+            if (callbacksRef.current.onRoomCreated) {
+              callbacksRef.current.onRoomCreated(roomCode);
+            }
+          }
+        }, 3000);
       } else {
         console.log("🚪 Joining room:", user.roomCode, "as:", user.name);
-        socket.emit("join-room", {
-          roomId: user.roomCode,
-          name: user.name,
-          role: user.role,
-        });
-      }
-
-      // Handle room creation vs joining
-      if (user.roomCode === "creating") {
-        console.log(`🏗️ Creating new room for ${user.name}`);
-        socket.emit("create-room", {
-          userName: user.name,
-        });
-      } else {
-        // Join existing room
-        console.log(
-          `🏠 Joining room: ${user.roomCode} as ${user.name} (${user.role})`
-        );
         socket.emit("join-room", {
           roomId: user.roomCode,
           userName: user.name,
           userRole: user.role,
         });
+      }
+    });
+
+    socket.on("connect_error", (error) => {
+      console.log("❌ Connection error:", error);
+      callbacksRef.current.setIsLoading(false);
+      callbacksRef.current.onConnectionChange(false);
+      
+      // For single server deployment, only fall back to local mode after multiple failures
+      console.log("🔄 Connection failed, will retry with Socket.IO built-in logic");
+      
+      // Only generate local room code if it's a room creation and we've tried for a while
+      if (user.roomCode === "creating") {
+        setTimeout(() => {
+          if (!socketRef.current?.connected) {
+            console.log("🔄 Generating local room code after connection failures");
+            const roomCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+            if (callbacksRef.current.onRoomCreated) {
+              callbacksRef.current.onRoomCreated(roomCode);
+            }
+          }
+        }, 10000); // Wait longer for single server
       }
     });
 
