@@ -58,7 +58,7 @@ const AuthScreen = ({ onLogin }: { onLogin: (user: User) => void }) => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-pink-600">
-            Love Draw Sync 💕
+            💕HeartCanvas
           </CardTitle>
           <CardDescription>
             Draw together in real-time with your partner
