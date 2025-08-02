@@ -3,8 +3,11 @@ const { Server } = require("socket.io");
 const next = require("next");
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = "localhost";
+const hostname = dev ? "localhost" : "0.0.0.0"; // Bind to all interfaces in production
 const port = process.env.PORT || 3000;
+
+console.log(`🚀 Starting server in ${dev ? 'development' : 'production'} mode`);
+console.log(`🌐 Hostname: ${hostname}, Port: ${port}`);
 
 // Prepare Next.js app
 const app = next({ dev, hostname, port });
@@ -18,17 +21,18 @@ app.prepare().then(() => {
 
   const io = new Server(httpServer, {
     cors: {
-      origin: "*",
+      origin: process.env.APP_URL || "*",
       methods: ["GET", "POST"],
+      credentials: true,
     },
-    // Optimize Socket.IO settings to reduce polling frequency
+    // Optimized settings for Render deployment
     pingTimeout: 60000,
     pingInterval: 25000,
     upgradeTimeout: 10000,
     allowUpgrades: true,
     transports: ["websocket", "polling"],
-    // Reduce polling frequency
-    pollingDuration: 30000,
+    // Allow WebSocket connections
+    allowEIO3: true,
   });
 
   io.on("connection", (socket) => {
@@ -277,10 +281,12 @@ app.prepare().then(() => {
 
   httpServer
     .once("error", (err) => {
-      console.error(err);
+      console.error("❌ Server error:", err);
       process.exit(1);
     })
-    .listen(port, () => {
-      console.log(`> Ready on http://${hostname}:${port}`);
+    .listen(port, hostname, () => {
+      console.log(`✅ Ready on http://${hostname}:${port}`);
+      console.log(`🌐 App URL: ${process.env.APP_URL || 'Not set'}`);
+      console.log(`🔌 Socket.IO server running with WebSocket support`);
     });
 });

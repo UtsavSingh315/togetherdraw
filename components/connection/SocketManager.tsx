@@ -4,10 +4,12 @@ import { io, Socket } from "socket.io-client";
 // Dynamic socket URL that works in any environment
 const getSocketUrl = () => {
   if (typeof window !== "undefined") {
+    // In browser, use the current origin
     return window.location.origin;
   }
+  // Server-side rendering
   return process.env.NODE_ENV === "production"
-    ? process.env.APP_URL || "https://heartcanvas.vercel.app/"
+    ? process.env.APP_URL || "http://localhost:3000"
     : "http://localhost:3000";
 };
 
@@ -94,10 +96,13 @@ export const SocketManager: React.FC<SocketManagerProps> = ({
 
     const socket = io(SOCKET_URL, {
       transports: ["websocket", "polling"],
-      timeout: 20000,
+      timeout: 10000, // Increased for Render's network
       forceNew: false,
       upgrade: true,
       rememberUpgrade: true,
+      reconnection: true, // Enable reconnection for Render
+      reconnectionAttempts: 3,
+      reconnectionDelay: 1000,
     });
 
     socketRef.current = socket;
@@ -112,17 +117,6 @@ export const SocketManager: React.FC<SocketManagerProps> = ({
       if (user.roomCode === "creating") {
         console.log("🏗️ Creating new room for:", user.name);
         socket.emit("create-room", { userName: user.name });
-        
-        // Fallback timeout for room creation (reduced since server should respond quickly)
-        setTimeout(() => {
-          if (!socket.connected) {
-            console.log("⏰ Room creation timeout, generating local room code");
-            const roomCode = Math.random().toString(36).substring(2, 10).toUpperCase();
-            if (callbacksRef.current.onRoomCreated) {
-              callbacksRef.current.onRoomCreated(roomCode);
-            }
-          }
-        }, 3000);
       } else {
         console.log("🚪 Joining room:", user.roomCode, "as:", user.name);
         socket.emit("join-room", {
@@ -138,21 +132,8 @@ export const SocketManager: React.FC<SocketManagerProps> = ({
       callbacksRef.current.setIsLoading(false);
       callbacksRef.current.onConnectionChange(false);
       
-      // For single server deployment, only fall back to local mode after multiple failures
-      console.log("🔄 Connection failed, will retry with Socket.IO built-in logic");
-      
-      // Only generate local room code if it's a room creation and we've tried for a while
-      if (user.roomCode === "creating") {
-        setTimeout(() => {
-          if (!socketRef.current?.connected) {
-            console.log("🔄 Generating local room code after connection failures");
-            const roomCode = Math.random().toString(36).substring(2, 10).toUpperCase();
-            if (callbacksRef.current.onRoomCreated) {
-              callbacksRef.current.onRoomCreated(roomCode);
-            }
-          }
-        }, 10000); // Wait longer for single server
-      }
+      // For Render deployment, allow Socket.IO to handle reconnection
+      console.log("🔄 Connection failed, Socket.IO will retry automatically");
     });
 
     socket.on("disconnect", () => {
