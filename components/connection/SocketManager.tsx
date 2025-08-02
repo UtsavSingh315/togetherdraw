@@ -3,7 +3,7 @@ import { io, Socket } from "socket.io-client";
 
 const SOCKET_URL =
   process.env.NODE_ENV === "production"
-    ? "https://your-production-url.com"
+    ? process.env.APP_URL
     : "http://localhost:3000";
 
 interface User {
