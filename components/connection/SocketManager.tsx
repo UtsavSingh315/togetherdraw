@@ -1,10 +1,17 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
-const SOCKET_URL =
-  process.env.NODE_ENV === "production"
-    ? process.env.APP_URL
+// Dynamic socket URL that works in any environment
+const getSocketUrl = () => {
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+  return process.env.NODE_ENV === "production"
+    ? process.env.APP_URL || "https://heartcanvas.vercel.app/"
     : "http://localhost:3000";
+};
+
+const SOCKET_URL = getSocketUrl();
 
 interface User {
   name: string;
@@ -97,6 +104,19 @@ export const SocketManager: React.FC<SocketManagerProps> = ({
       setIsConnected(true);
       callbacksRef.current.setIsLoading(false);
       callbacksRef.current.onConnectionChange(true);
+
+      // Handle room creation or joining after connection
+      if (user.roomCode === "creating") {
+        console.log("🏗️ Creating new room for:", user.name);
+        socket.emit("create-room", { name: user.name });
+      } else {
+        console.log("🚪 Joining room:", user.roomCode, "as:", user.name);
+        socket.emit("join-room", {
+          roomId: user.roomCode,
+          name: user.name,
+          role: user.role,
+        });
+      }
 
       // Handle room creation vs joining
       if (user.roomCode === "creating") {
